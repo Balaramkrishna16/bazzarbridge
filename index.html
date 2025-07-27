@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BazaarBridge - Login/Register</title>
+  <style>
+    /* General */
+    body {
+      margin: 0;
+      background: #f5f0e6;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #3c2f18;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      user-select: none;
+      justify-content: center;
+      height: 100vh; /* center vertically */
+    }
+    h1, h2, h3 {
+      margin: 0.15em 0 0.5em 0;
+      letter-spacing: 0.04em;
+      color: #6c4a00;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1em;
+      padding: 12px 22px;
+      margin: 10px 0px;
+      color: white;
+      background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+      box-shadow: 0 4px 20px rgba(251,146,60,0.5);
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+      user-select: none;
+      width: 320px; /* match container width */
+    }
+    button:hover {
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+      box-shadow: 0 6px 30px rgba(251,146,60,0.7);
+      transform: scale(1.05);
+    }
+    button:active {
+      transform: scale(1);
+      box-shadow: 0 4px 20px rgba(251,146,60,0.5);
+    }
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"], select, textarea {
+      border-radius: 10px;
+      border: 2px solid #fbbf24;
+      font-size: 1.05em;
+      padding: 10px 14px;
+      outline: none;
+      width: 320px;
+      box-sizing: border-box;
+      font-weight: 600;
+      color: #6b4c00;
+      background: #fff8e1;
+      transition: border-color 0.3s ease;
+      resize: vertical;
+      margin: 0.5rem 0;
+      display: block;
+    }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+      border-color: #f97316;
+      background: #fff3cd;
+    }
+    textarea {
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    /* Container for login */
+    .login-container {
+      background: #fffdf4;
+      border-radius: 16px;
+      box-shadow: 0 0 38px rgba(255, 157, 59, 0.3);
+      padding: 25px 25px 35px;
+      box-sizing: border-box;
+      width: 360px;
+      user-select: none;
+    }
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #6c4a00;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-size: 1.8rem;
+    }
+    .message {
+      text-align: center;
+      margin-top: 1rem;
+      color: red;
+      font-weight: 700;
+      user-select: text;
+      min-height: 1.5em;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container" role="main" aria-label="BazaarBridge Login and Registration form">
+    <h2>BazaarBridge</h2>
+    <input type="email" id="email" placeholder="Email" aria-label="Email address" autocomplete="email" required />
+    <input type="password" id="password" placeholder="Password" aria-label="Password" autocomplete="current-password" required />
+    <select id="role" aria-label="Select role">
+      <option value="vendor">Vendor</option>
+      <option value="supplier">Supplier</option>
+    </select>
+    <button onclick="register()" aria-label="Register new account">Register</button>
+    <button onclick="login()" aria-label="Login to your account">Login</button>
+    <div class="message" id="message" role="alert" aria-live="polite"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyClx5MABlvGxawuWYHlgB9-KOadcZO1wWo",
+      authDomain: "bazzarbridge.firebaseapp.com",
+      projectId: "bazzarbridge",
+      storageBucket: "bazzarbridge.appspot.com",
+      messagingSenderId: "105259659880",
+      appId: "1:105259659880:web:a34af0565523b135b0c1dd",
+      measurementId: "G-LZQWY2PPGE",
+      databaseURL: "https://bazzarbridge-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    function showMessage(msg, isError = true) {
+      const msgDiv = document.getElementById("message");
+      msgDiv.style.color = isError ? "red" : "green";
+      msgDiv.innerText = msg;
+    }
+
+    window.register = function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const role = document.getElementById("role").value;
+
+      if (!email || !password) {
+        showMessage("Please enter both email and password.");
+        return;
+      }
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+          const user = userCredential.user;
+          return set(ref(db, "users/" + user.uid), {
+            email,
+            role
+          }).then(() => {
+            showMessage("Registered successfully!", false);
+          });
+        })
+        .catch(error => {
+          showMessage(error.message);
+        });
+    };
+
+    window.login = function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        showMessage("Please enter both email and password.");
+        return;
+      }
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+          const user = userCredential.user;
+          return get(ref(db, "users/" + user.uid)).then(snapshot => {
+            if (snapshot.exists()) {
+              const role = snapshot.val().role;
+              showMessage(`Logged in as ${role}! Redirecting...`, false);
+              // Redirect with role so web.html can show proper dashboard
+              window.location.href = `web.html?role=${encodeURIComponent(role)}`;
+            } else {
+              showMessage("User role not found.");
+            }
+          });
+        })
+        .catch(error => {
+          showMessage(error.message);
+        });
+    };
+  </script>
+</body>
+</html>

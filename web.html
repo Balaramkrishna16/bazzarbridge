@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BazaarBridge – Connect Vendors & Suppliers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* General */
+    body {
+      margin: 0;
+      background: #f5f0e6;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #3c2f18;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      user-select: none;
+    }
+    h1, h2, h3 {
+      margin: 0.15em 0 0.5em 0;
+      letter-spacing: 0.04em;
+      color: #6c4a00;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1em;
+      padding: 12px 22px;
+      margin: 10px 20px;
+      color: white;
+      background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+      box-shadow: 0 4px 20px rgba(251,146,60,0.5);
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+      user-select: none;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+      box-shadow: 0 6px 30px rgba(251,146,60,0.7);
+      transform: scale(1.05);
+    }
+    button:active {
+      transform: scale(1);
+      box-shadow: 0 4px 20px rgba(251,146,60,0.5);
+    }
+    input[type="text"], input[type="number"], select, textarea {
+      border-radius: 10px;
+      border: 2px solid #fbbf24;
+      font-size: 1.05em;
+      padding: 10px 14px;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+      font-weight: 600;
+      color: #6b4c00;
+      background: #fff8e1;
+      transition: border-color 0.3s ease;
+      resize: vertical;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+      border-color: #f97316;
+      background: #fff3cd;
+    }
+    textarea {
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    /* Container */
+    #appContainer {
+      max-width: 480px;
+      width: 100vw;
+      background: #fffdf4;
+      border-radius: 16px;
+      box-shadow: 0 0 38px rgba(255, 157, 59, 0.3);
+      padding: 25px 25px 35px;
+      box-sizing: border-box;
+    }
+    /* Dashboard Switch */
+    #dashboardSelect {
+      text-align: center;
+    }
+    #dashboardSelect p {
+      font-size: 1.15em;
+      color: #a67c00;
+      margin-bottom: 1em;
+      font-weight: 600;
+    }
+    /* Vendor and Supplier Dashboard - visible state */
+    #vendorDashboard, #supplierDashboard {
+      display: none;
+    }
+    #vendorDashboard.active, #supplierDashboard.active {
+      display: block;
+    }
+    /* Search bar */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .search-bar input[type="text"] {
+      flex: 1;
+      font-weight: 700;
+    }
+    /* Supplier cards in vendor dashboard */
+    .supplier-card {
+      border-left: 6px solid #ffd54f;
+      box-shadow: 0 3px 17px #c0baaf41;
+      background: #fff;
+      margin-bottom: 18px;
+      padding: 18px 15px 18px 18px;
+      border-radius: 14px;
+      position: relative;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .supplier-card:hover {
+      box-shadow: 0 7px 30px rgba(255,165,0,0.35);
+      transform: scale(1.02);
+    }
+    .supplier-card.in-stock { border-left-color: #3fd347; }
+    .supplier-card.low-stock { border-left-color: #ffae42; }
+    .supplier-title {
+      font-size: 1.3em;
+      color: #a45100;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .supplier-title .badge {
+      background: #ffd700;
+      color: #885200;
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-weight: 600;
+      font-size: 0.9em;
+      user-select: none;
+    }
+    .supplier-meta, .price-line, .stock-msg, .card-actions {
+      margin-top: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      color: #613e00;
+    }
+    .price-line small {
+      font-weight: 400;
+      font-size: 0.9em;
+      color: #926f27;
+    }
+    .stock-msg strong {
+      font-weight: 700;
+    }
+    /* Rating form in vendor dashboard */
+    .rate-form {
+      margin-top: 12px;
+    }
+    .rate-form input[type="number"] {
+      width: 80px;
+      font-weight: 700;
+    }
+    .rate-form textarea {
+      margin-top: 6px;
+      resize: vertical;
+      height: 55px;
+      font-weight: 600;
+    }
+    .rate-form button {
+      margin-top: 6px;
+      background: #f97316;
+      width: 100%;
+    }
+    /* Repeat last order button */
+    .repeat-btn {
+      width: 100%;
+      background: #712b00;
+      margin-top: 10px;
+      padding: 14px;
+    }
+    /* Supplier Dashboard styles */
+    .update-form label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 700;
+      color: #7b5000;
+    }
+    .update-btn {
+      margin-top: 14px;
+      width: 100%;
+      background: #e87a18;
+      color: #fff;
+      padding: 12px 0;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1.1em;
+    }
+    .order-list-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 3px 20px #ba9d6e3c;
+      margin-bottom: 16px;
+      color: #5a3e00;
+      font-weight: 600;
+      position: relative;
+    }
+    /* Accept/Reject button styles */
+    .order-list-card .accept-btn {
+      background: #2d922d !important;
+      margin-right: 12px;
+      color: #fff !important;
+      font-weight: 700;
+      border-radius: 9px;
+      padding: 8px 18px;
+      box-shadow: 0 2px 8px #2d922d44;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .order-list-card .accept-btn:hover {
+      background: #37c637 !important;
+    }
+    .order-list-card .reject-btn {
+      background: #b33 !important;
+      color: #fff !important;
+      font-weight: 700;
+      border-radius: 9px;
+      padding: 8px 18px;
+      box-shadow: 0 2px 8px #b333;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .order-list-card .reject-btn:hover {
+      background: #d94b4b !important;
+    }
+    .order-list-card button {
+      border: none;
+      cursor: pointer;
+    }
+    /* Other buttons in order cards */
+    .order-list-card button:not(.accept-btn):not(.reject-btn) {
+      background: #f97316;
+      border-radius: 9px;
+      color: #fff;
+      padding: 8px 12px;
+      font-weight: 700;
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 2px 12px rgba(249,115,22,0.5);
+      transition: background 0.3s;
+    }
+    .order-list-card button:not(.accept-btn):not(.reject-btn):hover {
+      background: #fb923c;
+      box-shadow: 0 3px 20px rgba(251,146,60,0.7);
+    }
+    .supplier-stats {
+      margin-top: 12px;
+      font-weight: 700;
+      font-size: 1.1em;
+      color: #6c4a00;
+    }
+    /* Back button styles */
+    .back-btn {
+      background: #864c00;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95em;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 18px;
+      user-select: none;
+      transition: background 0.3s ease;
+      display: inline-block;
+    }
+    .back-btn:hover {
+      background: #b16000;
+    }
+    .back-btn:focus {
+      outline: 3px solid #faad14;
+      outline-offset: 2px;
+    }
+    /* Responsive */
+    @media(max-width: 500px) {
+      #appContainer {
+        border-radius: 0;
+        box-shadow: none;
+        padding: 15px 15px 25px;
+      }
+      button {
+        margin: 10px 10px;
+        font-size: 1em;
+        padding: 12px 15px;
+      }
+      .order-list-card button:not(.accept-btn):not(.reject-btn) {
+        position: static;
+        transform: none;
+        margin-top: 8px;
+        width: 100%;
+      }
+      .order-list-card .accept-btn, .order-list-card .reject-btn {
+        display: block;
+        margin-right: 0;
+        margin-bottom: 6px;
+        width: 100%;
+      }
+    }
+    /* Cart styles */
+    #cartSection {
+      margin-top: 20px;
+      background: #fff8e1;
+      padding: 12px 16px;
+      border-radius: 14px;
+      box-shadow: 0 0 12px #fbbf2455;
+      user-select: text;
+    }
+    #cartItems table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #cartItems th, #cartItems td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #f5e2a4;
+      text-align: left;
+      color: #7c5600;
+    }
+    #cartItems th {
+      background: #f5e2a4;
+    }
+    #cartItems button {
+      background: #b33 !important;
+      padding: 3px 7px !important;
+      font-size: 0.9em !important;
+      line-height: 1;
+      user-select: none;
+    }
+    #placeOrderBtn {
+      width: 100%;
+      margin-top: 10px;
+    }
+    /* Previous Orders Styles */
+    #orderHistoryList {
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid #fbbf24;
+      padding: 10px;
+      border-radius: 8px;
+      user-select: text;
+    }
+    #orderHistoryList > div {
+      margin-bottom: 14px;
+      border-bottom: 1px solid #fbbf24;
+      padding-bottom: 8px;
+    }
+    #orderHistoryList button {
+      background: #4a8320 !important;
+      margin-top: 4px !important;
+      padding: 6px 12px !important;
+      border-radius: 10px !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      box-shadow: 0 3px 10px rgba(74,131,32,0.5);
+      transition: background 0.3s ease !important;
+    }
+    #orderHistoryList button:hover {
+      background: #7ebf3a !important;
+      box-shadow: 0 5px 20px rgba(126,191,58,0.7) !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="appContainer" role="main" aria-label="BazaarBridge raw material sourcing app">
+    <!-- Dashboard selector -->
+    <div id="dashboardSelect">
+      <h1>🛒 BazaarBridge</h1>
+      <p>Connects food vendors and suppliers for smooth daily raw material sourcing</p>
+      <button id="showVendorBtn" aria-label="Open vendor dashboard">Vendor Dashboard</button>
+      <button id="showSupplierBtn" aria-label="Open supplier dashboard">Supplier Dashboard</button>
+    </div>
+
+    <!-- Vendor Dashboard -->
+    <div id="vendorDashboard" aria-hidden="true" tabindex="0" aria-label="Vendor dashboard containing supplier search and orders">
+      <header>
+        <h2>BazaarBridge – Vendors</h2>
+        <p>Best prices. Freshest stock. Fastest delivery.</p>
+      </header>
+      <button class="back-btn" aria-label="Back to dashboard selection">⬅ Back</button>
+      <div class="search-bar">
+        <input type="text" id="ingredientInput" aria-label="Search ingredient" placeholder="e.g. onions, potatoes, tomatoes" autocomplete="off" />
+        <button id="searchBtn" aria-label="Search suppliers">Search</button>
+      </div>
+      <div id="supplierList" aria-live="polite" aria-atomic="true" style="min-height:80px;">
+        <p style="color:#b2a394;">🔎 Start by searching for an ingredient...</p>
+      </div>
+
+      <!-- Cart Section -->
+      <div id="cartSection" aria-label="Shopping cart">
+        <h3>🛒 Cart</h3>
+        <div id="cartItems">
+          <p>Cart is empty.</p>
+        </div>
+        <div style="margin-top:10px;">
+          <strong>Total: ₹<span id="cartTotal">0</span></strong>
+        </div>
+        <button id="placeOrderBtn" onclick="placeBulkOrder()" style="margin-top:10px;" disabled>Place Order</button>
+      </div>
+
+      <button id="repeatOrderBtn" class="repeat-btn" style="display:none;">Repeat Last Order</button>
+
+      <hr />
+      <section aria-label="Previous orders" style="margin-top:20px;">
+        <h3>🕒 Previous Orders</h3>
+        <button id="toggleHistoryBtn" style="margin-bottom:10px;">Show / Hide Order History</button>
+        <div id="orderHistoryList" style="display:none;"></div>
+      </section>
+
+      <hr/>
+      <section aria-label="Current orders" style="margin-top:20px;">
+        <h3>📦 Current Orders</h3>
+        <div id="vendorCurrentOrdersList" style="max-height:200px; overflow-y:auto; border:1px solid #fbbf24; padding:10px; border-radius:8px; min-height:100px;">
+          <p>No current orders.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Supplier Dashboard -->
+    <div id="supplierDashboard" aria-hidden="true" tabindex="0" aria-label="Supplier dashboard containing product management and order management">
+      <header>
+        <h2>BazaarBridge – Supplier Panel</h2>
+        <p>Manage your products and orders, boost your rating!</p>
+      </header>
+      <button class="back-btn" aria-label="Back to dashboard selection">⬅ Back</button>
+
+      <!-- Add or Edit Product Form -->
+      <form id="addProductForm" class="update-form" aria-label="Add or update product form">
+        <label for="newProdName">Product Name:</label>
+        <input type="text" id="newProdName" name="newProdName" placeholder="e.g. Ginger, Coriander" required autocomplete="off" />
+
+        <label for="newProdPrice">Set Price/kg (₹):</label>
+        <input type="number" id="newProdPrice" name="newProdPrice" min="1" required />
+
+        <label for="newProdQty">Quantity in stock (kg):</label>
+        <input type="number" id="newProdQty" name="newProdQty" min="0" required />
+
+        <label for="newProdFresh">Freshness:</label>
+        <select id="newProdFresh" name="newProdFresh" required>
+          <option>Fresh Today</option>
+          <option>New Batch</option>
+          <option>Old batch</option>
+        </select>
+
+        <button type="submit" class="update-btn">Add Product</button>
+      </form>
+
+      <hr />
+
+      <!-- Current Products List -->
+      <h3>Your Products:</h3>
+      <div id="supplierProductsList" aria-live="polite" aria-atomic="true" style="min-height: 80px; margin-bottom: 20px;">
+        <!-- dynamically filled product cards -->
+      </div>
+
+      <hr />
+
+      <h3>Incoming Orders:</h3>
+      <div id="ordersList" aria-live="polite" aria-atomic="true" style="min-height: 200px;">
+        <p style="color:#907643;">Loading orders...</p>
+      </div>
+
+      <hr />
+
+      <div class="supplier-stats" aria-label="Supplier ratings and fulfillment">
+        Supplier Ratings: ⭐⭐⭐⭐☆ (4.3 avg.) <span style="background:#ffd700; padding:3px 8px; border-radius:10px;">FSSAI</span><br />
+        Fulfillment Rate: <span id="fulfillRate">92%</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      // --- GLOBAL STATE ---
+      let lastOrderSupplierId = null;
+      let cart = [];
+
+      // Load order history from localStorage or initialize empty
+      let orderHistory = JSON.parse(localStorage.getItem('bazaarbridge_orderHistory') || '[]');
+      function saveOrderHistory() {
+        localStorage.setItem('bazaarbridge_orderHistory', JSON.stringify(orderHistory));
+      }
+
+      // Shared dynamic product list (supplier's products)
+      let supplierProducts = [
+        { id: 1, name: "Onions", price: 16, qty: 100, freshness: "Fresh Today" },
+        { id: 2, name: "Potatoes", price: 18, qty: 70, freshness: "New Batch" },
+        { id: 3, name: "Tomatoes", price: 20, qty: 40, freshness: "Fresh Today" }
+      ];
+
+      // Orders array holds all orders from vendor (multiple suppliers possible)
+      // Each order object:
+      // { id, vendor, items, status, eta, date }
+      let orders = [];
+
+      // --- ELEMENTS ---
+      const dashboardSelect = document.getElementById("dashboardSelect");
+      const vendorDashboard = document.getElementById("vendorDashboard");
+      const supplierDashboard = document.getElementById("supplierDashboard");
+      const showVendorBtn = document.getElementById("showVendorBtn");
+      const showSupplierBtn = document.getElementById("showSupplierBtn");
+
+      // Vendor elements
+      const ingredientInput = document.getElementById("ingredientInput");
+      const searchBtn = document.getElementById("searchBtn");
+      const supplierList = document.getElementById("supplierList");
+      const repeatOrderBtn = document.getElementById("repeatOrderBtn");
+      const cartItemsDiv = document.getElementById("cartItems");
+      const cartTotalSpan = document.getElementById("cartTotal");
+      const placeOrderBtn = document.getElementById("placeOrderBtn");
+      const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
+      const orderHistoryList = document.getElementById('orderHistoryList');
+      const vendorCurrentOrdersList = document.getElementById("vendorCurrentOrdersList");
+
+      // Supplier elements
+      const addProductForm = document.getElementById("addProductForm");
+      const supplierProductsList = document.getElementById("supplierProductsList");
+      const ordersList = document.getElementById("ordersList");
+      const fulfillRateEl = document.getElementById("fulfillRate");
+
+      // Back buttons
+      const vendorBackBtn = vendorDashboard.querySelector(".back-btn");
+      const supplierBackBtn = supplierDashboard.querySelector(".back-btn");
+
+      // --- DASHBOARD SWITCH LOGIC ---
+      function showDashboard(which) {
+        if (which === "vendor") {
+          dashboardSelect.style.display = "none";
+          vendorDashboard.style.display = "block";
+          vendorDashboard.classList.add("active");
+          vendorDashboard.setAttribute("aria-hidden", "false");
+
+          supplierDashboard.style.display = "none";
+          supplierDashboard.classList.remove("active");
+          supplierDashboard.setAttribute("aria-hidden", "true");
+
+          ingredientInput.focus();
+          renderVendorSupplierList();
+          renderCart();
+          renderPreviousOrders();
+          orderHistoryList.style.display = "none";
+          renderVendorCurrentOrders();
+        } else if (which === "supplier") {
+          dashboardSelect.style.display = "none";
+          supplierDashboard.style.display = "block";
+          supplierDashboard.classList.add("active");
+          supplierDashboard.setAttribute("aria-hidden", "false");
+
+          vendorDashboard.style.display = "none";
+          vendorDashboard.classList.remove("active");
+          vendorDashboard.setAttribute("aria-hidden", "true");
+
+          addProductForm.reset();
+          updateAddProductFormToAddMode();
+          addProductForm.elements["newProdName"].focus();
+
+          renderSupplierProducts();
+          renderOrders();
+        }
+      }
+
+      showVendorBtn.addEventListener("click", () => showDashboard("vendor"));
+      showSupplierBtn.addEventListener("click", () => showDashboard("supplier"));
+
+      vendorBackBtn.addEventListener("click", () => {
+        vendorDashboard.style.display = "none";
+        vendorDashboard.classList.remove("active");
+        vendorDashboard.setAttribute("aria-hidden", "true");
+
+        dashboardSelect.style.display = "block";
+        dashboardSelect.querySelector("button").focus();
+      });
+
+      supplierBackBtn.addEventListener("click", () => {
+        supplierDashboard.style.display = "none";
+        supplierDashboard.classList.remove("active");
+        supplierDashboard.setAttribute("aria-hidden", "true");
+
+        dashboardSelect.style.display = "block";
+        dashboardSelect.querySelector("button").focus();
+      });
+
+      // --- VENDOR DASHBOARD FUNCTIONS ---
+      function renderStarsAvg(ratings) {
+        if (!ratings || ratings.length === 0) return "";
+        const avg = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1);
+        const fullStars = Math.round(avg);
+        return "⭐".repeat(fullStars) + ` (${avg})`;
+      }
+
+      function renderVendorSupplierList() {
+        if (!supplierProducts || supplierProducts.length === 0) {
+          supplierList.innerHTML =
+            '<p style="color:#b2a394;">No products available from supplier. Please ask supplier to add products.</p>';
+          repeatOrderBtn.style.display = "none";
+          return;
+        }
+        window.vendorDataDemo = supplierProducts.map((prod, index) => ({
+          name: `Supplier Product ${prod.name}`,
+          badge: "FSSAI",
+          distance: `${(1 + index * 0.6).toFixed(1)} km`,
+          product: prod.name,
+          price: prod.price,
+          stock: prod.qty,
+          freshness: prod.freshness,
+          minOrder: 20,
+          delivery: "1-2 hr",
+          eta: "Today 10am-6pm",
+          reviews: [4, 5],
+          supplierId: 1000 + index,
+          inStock: prod.qty > 0
+        }));
+
+        const query = ingredientInput.value.trim().toLowerCase();
+
+        if (!query) {
+          supplierList.innerHTML =
+            '<p style="color:#b2a394;">🔎 Start by searching for an ingredient...</p>';
+          repeatOrderBtn.style.display = "none";
+          return;
+        }
+
+        const matches = window.vendorDataDemo.filter((s) =>
+          s.product.toLowerCase().includes(query)
+        );
+
+        if (matches.length === 0) {
+          supplierList.innerHTML = `<p>No suppliers for "${query}", try another ingredient!</p>`;
+          repeatOrderBtn.style.display = "none";
+          return;
+        }
+        supplierList.innerHTML = matches.map(renderSupplierCard).join("");
+      }
+
+      function renderSupplierCard(s) {
+        const stockClass =
+          s.stock === 0 ? "out-stock" : s.stock < 30 ? "low-stock" : "in-stock";
+        const stockMsg =
+          s.stock === 0
+            ? '<strong style="color:#d64141;">Out of Stock</strong>'
+            : s.stock < 30
+            ? '<strong style="color:#e79611">Low stock, hurry!</strong>'
+            : "In stock";
+
+        return `
+          <div class="supplier-card ${stockClass}" tabindex="0" aria-label="Supplier ${s.name}, price ₹${s.price} per kilogram, freshness ${s.freshness}, available stock ${s.stock} kilograms">
+            <div class="supplier-title">
+              ${s.name}
+              <span class="badge">${s.badge}</span>
+            </div>
+            <div class="supplier-meta">📍 ${s.distance} | Minimum order ₹${s.minOrder}</div>
+            <div class="price-line">₹${s.price}/kg <small>(${s.freshness})</small></div>
+            <div class="stock-msg">${stockMsg}</div>
+            <div>Delivery: ${s.delivery} (${s.eta})</div>
+            <div>Last 5 reviews: ${renderStarsAvg(s.reviews)}</div>
+            <div style="margin-top:6px; display:flex; gap: 10px; align-items:center;">
+              <label for="qty-${s.supplierId}" style="font-weight:600;">Qty (kg):</label>
+              <input type="number" id="qty-${s.supplierId}" min="1" max="${s.stock}" value="1" style="width:70px; font-weight:600;" aria-label="Quantity for product ${s.product}" />
+              <button ${s.inStock && s.stock > 0 ? "" : 'disabled style="background:#b2a394; cursor: not-allowed;"'} onclick="addToCart(${s.supplierId})" aria-label="Add ${s.product} to cart">Add to Cart</button>
+            </div>
+            <div class="card-actions" style="margin-top:10px;">
+              <button ${s.inStock && s.stock > 0 ? "" : 'disabled style="background:#b2a394"'} aria-label="Order now from ${s.name}" onclick="orderNow(${s.supplierId})">Order Now</button>
+            </div>
+            <form class="rate-form" id="rate-${s.supplierId}" style="display:none;" onsubmit="event.preventDefault();rateSupplier(${s.supplierId});" aria-label="Rate ${s.name}">
+              <input type="number" min="1" max="5" placeholder="Stars 1-5" id="star-${s.supplierId}" required aria-required="true" />
+              <textarea placeholder="Write a short review" id="msg-${s.supplierId}" required aria-required="true"></textarea>
+              <button type="submit">Submit Review</button>
+            </form>
+          </div>`;
+      }
+
+      window.addToCart = function (supplierId) {
+        const qtyInput = document.getElementById(`qty-${supplierId}`);
+        const qty = qtyInput ? parseInt(qtyInput.value, 10) : 1;
+        if (isNaN(qty) || qty <= 0) {
+          alert("Please enter a valid quantity.");
+          return;
+        }
+        const product = window.vendorDataDemo.find((p) => p.supplierId === supplierId);
+        if (!product) {
+          alert("Product not found.");
+          return;
+        }
+        if (qty > product.stock) {
+          alert(`Quantity exceeds available stock (${product.stock} kg).`);
+          return;
+        }
+        const existingIndex = cart.findIndex((item) => item.supplierId === supplierId);
+        if (existingIndex > -1) {
+          cart[existingIndex].quantity += qty;
+          if (cart[existingIndex].quantity > product.stock) {
+            cart[existingIndex].quantity = product.stock;
+            alert(`Quantity adjusted to available stock max ${product.stock} kg.`);
+          }
+        } else {
+          cart.push({
+            supplierId: supplierId,
+            productName: product.product,
+            pricePerKg: product.price,
+            quantity: qty,
+          });
+        }
+        renderCart();
+        alert(`${product.product} x${qty} added to cart.`);
+      };
+
+      function renderCart() {
+        if (!cartItemsDiv) return;
+        if (!cart.length) {
+          cartItemsDiv.innerHTML = "<p>Cart is empty.</p>";
+          cartTotalSpan.textContent = "0";
+          placeOrderBtn.disabled = true;
+          return;
+        }
+        let html = `<table aria-label="Cart items" style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:8px;">Product</th>
+              <th style="text-align:right;padding:8px;">Price/kg (₹)</th>
+              <th style="text-align:right;padding:8px;">Quantity (kg)</th>
+              <th style="text-align:right;padding:8px;">Subtotal (₹)</th>
+              <th style="text-align:center;padding:8px;">Remove</th>
+            </tr>
+          </thead><tbody>`;
+        let total = 0;
+        cart.forEach((item, idx) => {
+          const subtotal = item.quantity * item.pricePerKg;
+          total += subtotal;
+          html += `
+            <tr>
+              <td style="padding:8px;">${item.productName}</td>
+              <td style="padding:8px; text-align:right;">${item.pricePerKg.toFixed(2)}</td>
+              <td style="padding:8px; text-align:right;">${item.quantity}</td>
+              <td style="padding:8px; text-align:right;">${subtotal.toFixed(2)}</td>
+              <td style="text-align:center; padding:8px;">
+                <button aria-label="Remove ${item.productName} from cart" onclick="removeFromCart(${idx})" title="Remove item">✕</button>
+              </td>
+            </tr>
+          `;
+        });
+        html += "</tbody></table>";
+        cartItemsDiv.innerHTML = html;
+        cartTotalSpan.textContent = total.toFixed(2);
+        placeOrderBtn.disabled = false;
+      }
+
+      window.removeFromCart = function (index) {
+        if (index >= 0 && index < cart.length) {
+          cart.splice(index, 1);
+          renderCart();
+        }
+      };
+
+      window.placeBulkOrder = function () {
+        if (!cart.length) return alert("Cart is empty.");
+        const orderTimestamp = new Date().toISOString();
+        const ordersBySupplier = {};
+        cart.forEach(item => {
+          if (!ordersBySupplier[item.supplierId]) ordersBySupplier[item.supplierId] = [];
+          ordersBySupplier[item.supplierId].push({
+            productName: item.productName,
+            quantity: item.quantity,
+            pricePerKg: item.pricePerKg
+          });
+        });
+        for (const [supplierId, items] of Object.entries(ordersBySupplier)) {
+          const total = items.reduce((sum, i) => sum + i.pricePerKg * i.quantity, 0);
+          const id = orderTimestamp + '-' + supplierId;
+          orders.unshift({
+            id,
+            vendor: "VendorUser",
+            items,
+            status: "Pending",
+            eta: "Today 12pm-5pm",
+            date: new Date(orderTimestamp).toLocaleString()
+          });
+        }
+        // Also save to localStorage order history
+        orderHistory.unshift({
+          id: orderTimestamp + "-bulk",
+          date: new Date(orderTimestamp).toLocaleString(),
+          items: cart.map(item => ({ ...item })),
+          total: cart.reduce((acc, i) => acc + i.pricePerKg * i.quantity, 0)
+        });
+        saveOrderHistory();
+        cart = [];
+        renderCart();
+        renderOrders();
+        renderVendorCurrentOrders();
+        renderPreviousOrders();
+        alert("Order placed! Suppliers will confirm soon.");
+      };
+
+      // Previous Orders
+      toggleHistoryBtn.addEventListener("click", () => {
+        if (orderHistoryList.style.display === "none") {
+          renderPreviousOrders();
+          orderHistoryList.style.display = "block";
+        } else {
+          orderHistoryList.style.display = "none";
+        }
+      });
+
+      function renderPreviousOrders() {
+        if (orderHistory.length === 0) {
+          orderHistoryList.innerHTML = "<p>No previous orders found.</p>";
+          return;
+        }
+        orderHistoryList.innerHTML = orderHistory
+          .map((order) => {
+            const itemsSummary = order.items
+              .map(item => `<li>${item.productName} x ${item.quantity} kg @ ₹${item.pricePerKg}/kg</li>`)
+              .join("");
+            return `
+          <div>
+            <strong>${order.date}</strong>
+            <ul style="margin: 6px 0 6px 20px;">${itemsSummary}</ul>
+            <div>Total: ₹${order.total.toFixed(2)}</div>
+            <button onclick='reorder("${order.id}")'>Reorder</button>
+          </div>
+        `;
+          })
+          .join("");
+      }
+
+      window.reorder = function (orderId) {
+        const order = orderHistory.find((o) => o.id === orderId);
+        if (!order) return alert("Order not found.");
+        cart = order.items.map((item) => ({ ...item }));
+        renderCart();
+        alert("Previous order loaded into cart. You can review and place order.");
+      };
+
+      // Supplier panel orders rendering and accept/reject buttons
+      function renderOrders() {
+        if (orders.length === 0) {
+          ordersList.innerHTML = '<p style="color:#9a876a; margin-top: 10px;">No orders yet.</p>';
+          return;
+        }
+        ordersList.innerHTML = orders.map(o => {
+          let actionButtons = "";
+          if (o.status === "Pending") {
+            actionButtons = `
+              <button class="accept-btn" aria-label="Accept order ${o.id}" onclick="acceptOrder('${o.id}')">Accept</button>
+              <button class="reject-btn" aria-label="Reject order ${o.id}" onclick="rejectOrder('${o.id}')">Reject</button>`;
+          } else if (o.status === "Confirmed") {
+            actionButtons = '<span style="font-weight:bold; color: green;">Confirmed</span>';
+          } else if (o.status === "Rejected") {
+            actionButtons = '<span style="font-weight:bold; color: red;">Rejected</span>';
+          } else if (o.status === "Delivered") {
+            actionButtons = '<span style="font-weight:bold;">Delivered ✔️</span>';
+          }
+
+          const itemsSummary = o.items.map(item => `${item.productName} x ${item.quantity} kg`).join(", ");
+
+          return `
+            <div class="order-list-card" tabindex="0" aria-label="Order from ${o.vendor}, status ${o.status}">
+              <div><b>Order ID:</b> ${o.id}</div>
+              <div><b>Vendor:</b> ${o.vendor}</div>
+              <div><b>Items:</b> ${itemsSummary}</div>
+              <div><b>Status:</b> ${o.status} | <b>ETA:</b> ${o.eta}</div>
+              <div style="margin-top:8px;">${actionButtons}</div>
+              <small>Placed on: ${o.date}</small>
+            </div>`;
+        }).join('');
+      }
+
+      window.acceptOrder = function(orderId) {
+        let order = orders.find(o => o.id === orderId);
+        if (!order) return alert("Order not found.");
+        order.status = "Confirmed";
+        renderOrders();
+        renderVendorCurrentOrders();
+        alert(`Order ${orderId} accepted.`);
+      };
+
+      window.rejectOrder = function(orderId) {
+        let order = orders.find(o => o.id === orderId);
+        if (!order) return alert("Order not found.");
+        order.status = "Rejected";
+        renderOrders();
+        renderVendorCurrentOrders();
+        alert(`Order ${orderId} rejected.`);
+      };
+
+      // Vendor dashboard current orders display (status updates)
+      function renderVendorCurrentOrders() {
+        if (orders.length === 0) {
+          vendorCurrentOrdersList.innerHTML = "<p>No current orders.</p>";
+          return;
+        }
+        vendorCurrentOrdersList.innerHTML = orders.map(o => {
+          const itemsSummary = o.items.map(item => `${item.productName} x ${item.quantity} kg`).join(", ");
+          const statusColor = o.status === "Confirmed" ? "green" 
+                              : o.status === "Rejected" ? "red" 
+                              : o.status === "Pending" ? "goldenrod" : "black";
+          return `
+            <div style="margin-bottom:10px; border-bottom:1px solid #fbbf24; padding-bottom:6px;">
+              <div><b>Order ID:</b> ${o.id}</div>
+              <div><b>Items:</b> ${itemsSummary}</div>
+              <div><b>Status:</b> <span style="color:${statusColor}; font-weight:bold;">${o.status}</span></div>
+              <small>Placed on: ${o.date}</small>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Rating, orderNow, repeatOrder handlers
+      window.orderNow = function (supplierId) {
+        lastOrderSupplierId = supplierId;
+        const el = document.getElementById(`rate-${supplierId}`);
+        if (el) el.style.display = "block";
+        alert("Order placed! Your delivery ETA will be sent by SMS.");
+        repeatOrderBtn.style.display = "block";
+      };
+
+      repeatOrderBtn.addEventListener("click", () => {
+        if (lastOrderSupplierId !== null) {
+          window.orderNow(lastOrderSupplierId);
+        }
+      });
+
+      window.rateSupplier = function (supplierId) {
+        const starsInput = document.getElementById(`star-${supplierId}`);
+        const msgInput = document.getElementById(`msg-${supplierId}`);
+        if (starsInput && msgInput) {
+          const stars = starsInput.value;
+          const msg = msgInput.value;
+          alert(`Thanks for your feedback!\n\nYou gave ${stars} stars: ${msg}`);
+          document.getElementById(`rate-${supplierId}`).style.display = "none";
+        }
+      };
+
+      // Supplier dashboard product list and management
+      function renderSupplierProducts() {
+        if (!supplierProductsList) return;
+        if (supplierProducts.length === 0) {
+          supplierProductsList.innerHTML =
+            '<p style="color:#9a876a;margin-top:10px;">No products yet.</p>';
+          return;
+        }
+        supplierProductsList.innerHTML = supplierProducts
+          .map(
+            (prod) => `
+          <div class="supplier-card" tabindex="0" aria-label="Product ${prod.name}, price ₹${prod.price}, quantity ${prod.qty}, freshness ${prod.freshness}">
+            <div class="supplier-title">${prod.name}</div>
+            <div class="price-line">₹${prod.price}/kg</div>
+            <div class="stock-msg">Quantity: ${prod.qty} kg</div>
+            <div>Freshness: ${prod.freshness}</div>
+            <button type="button" aria-label="Edit ${prod.name}" onclick="editProduct(${prod.id})" style="margin-top:8px;">Edit</button>
+            <button type="button" aria-label="Remove ${prod.name}" onclick="removeProduct(${prod.id})" style="margin-top:8px; background:#b33;">Remove</button>
+          </div>
+        `
+          )
+          .join("");
+      }
+
+      function addProduct(prod) {
+        prod.id = supplierProducts.length
+          ? Math.max(...supplierProducts.map((p) => p.id)) + 1
+          : 1;
+        supplierProducts.push(prod);
+        renderSupplierProducts();
+        renderVendorSupplierList();
+      }
+
+      function updateProduct(updatedProd) {
+        const idx = supplierProducts.findIndex((p) => p.id === updatedProd.id);
+        if (idx > -1) {
+          supplierProducts[idx] = updatedProd;
+          renderSupplierProducts();
+          renderVendorSupplierList();
+        }
+      }
+
+      function removeProduct(id) {
+        if (confirm("Are you sure you want to remove this product?")) {
+          supplierProducts = supplierProducts.filter((p) => p.id !== id);
+          renderSupplierProducts();
+          renderVendorSupplierList();
+          removeFromCartBySupplierId(id);
+        }
+      }
+      function removeFromCartBySupplierId(id) {
+        const vendorId = 1000 + supplierProducts.findIndex((p) => p.id === id);
+        if (vendorId !== -1) {
+          cart = cart.filter((item) => item.supplierId !== vendorId);
+          renderCart();
+        }
+      }
+
+      window.editProduct = function (id) {
+        const prod = supplierProducts.find((p) => p.id === id);
+        if (!prod) return;
+        document.getElementById("newProdName").value = prod.name;
+        document.getElementById("newProdPrice").value = prod.price;
+        document.getElementById("newProdQty").value = prod.qty;
+        document.getElementById("newProdFresh").value = prod.freshness;
+        updateAddProductFormToEditMode(prod.id);
+      };
+
+      let editingProductId = null;
+
+      function updateAddProductFormToEditMode(id) {
+        editingProductId = id;
+        const addBtn = document.querySelector(
+          "#addProductForm button[type='submit']"
+        );
+        addBtn.textContent = "Update Product";
+      }
+
+      function updateAddProductFormToAddMode() {
+        editingProductId = null;
+        const addBtn = document.querySelector(
+          "#addProductForm button[type='submit']"
+        );
+        addBtn.textContent = "Add Product";
+        addProductForm.reset();
+      }
+
+      addProductForm.onsubmit = function (e) {
+        e.preventDefault();
+        const name = document.getElementById("newProdName").value.trim();
+        const price = Number(document.getElementById("newProdPrice").value);
+        const qty = Number(document.getElementById("newProdQty").value);
+        const freshness = document.getElementById("newProdFresh").value;
+        if (!name || price <= 0 || qty < 0) {
+          alert("Please enter valid product data");
+          return;
+        }
+        if (editingProductId) {
+          updateProduct({ id: editingProductId, name, price, qty, freshness });
+          updateAddProductFormToAddMode();
+        } else {
+          addProduct({ name, price, qty, freshness });
+          addProductForm.reset();
+        }
+      };
+
+      // --- INITIAL SETUP ---
+      function init() {
+        dashboardSelect.style.display = "block";
+        vendorDashboard.style.display = "none";
+        supplierDashboard.style.display = "none";
+        repeatOrderBtn.style.display = "none";
+        renderOrders();
+        renderPreviousOrders();
+        renderVendorCurrentOrders();
+      }
+
+      init();
+
+      // Re-run search on input (live search)
+      ingredientInput.addEventListener("input", () => {
+        renderVendorSupplierList();
+      });
+    })();
+  </script>
+</body>
+</html>
